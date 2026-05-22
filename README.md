@@ -1,79 +1,121 @@
-# Express Session Authentication System
+# JWT Authentication System 🔐
 
-A secure authentication system built using Node.js, Express.js, MongoDB, bcrypt, and express-session.
+A secure authentication system built using Node.js, Express.js, MongoDB, bcrypt, and JSON Web Tokens (JWT).  
+It includes user registration, login, authentication, and role-based access control.
 
-## Features
+---
+
+## 🚀 Features
 
 - User Registration
 - User Login
-- Password Hashing with bcrypt
-- Session Authentication
-- MongoDB Session Store
+- Password Hashing using bcrypt
+- JWT Authentication
 - Protected Routes
-- Admin Authorization
-- EJS Templating
+- Role-Based Authorization (User/Admin)
+- Cookie-based token storage
+- MongoDB database integration
 
-## Technologies Used
+---
+
+## 🛠️ Tech Stack
 
 - Node.js
 - Express.js
 - MongoDB
 - Mongoose
 - bcryptjs
-- express-session
-- connect-mongo
+- jsonwebtoken
+- cookie-parser
 - EJS
 
-## Installation
+---
 
-### Clone the repository
+## 📂 Project Structure
 
-```bash
-git clone https://github.com/your-username/express-session-auth-system.git
+```
+/models
+/views
+app.js
+.env
 ```
 
-### Navigate into the project folder
+---
+
+## ⚙️ Installation
+
+### 1. Clone the repository
 
 ```bash
-cd express-session-auth-system
+git clone https://github.com/your-username/jwt-authentication-system.git
 ```
 
-### Install dependencies
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-### Create a .env file
+### 3. Create `.env` file
 
 ```env
 MONGO_URI=your_mongodb_connection_string
-SESSION_SECRET=your_secret_key
+JWT_SECRET=your_secret_key
 ```
 
-### Start the server
+---
+
+## ▶️ Run the project
 
 ```bash
 node app.js
 ```
 
-Server will run on:
+Server runs on:
 
-```text
+```
 http://localhost:3000
 ```
 
-## Routes
+---
 
-| Route | Description |
-|---|---|
-| / | Home Page |
-| /register | Register User |
-| /login | Login User |
-| /dashboard | Protected Dashboard |
-| /admin-only | Admin Protected Route |
-| /logout | Logout User |
+## 🔐 Authentication Flow
 
-## Author
+1. User registers → password is hashed
+2. User logs in → JWT token is generated
+3. Token stored in HTTP-only cookie
+4. Middleware verifies token for protected routes
+5. Admin routes restricted by role
+
+---
+
+## 📌 Routes
+
+| Route | Method | Description |
+|------|--------|-------------|
+| / | GET | Home Page |
+| /register | GET/POST | Register User |
+| /login | GET/POST | Login User |
+| /dashboard | GET | Protected Dashboard |
+| /admin-only | GET | Admin Only Route |
+| /logout | GET | Logout User |
+
+---
+
+## 👨‍💻 Author
 
 Ifra Malik
+
+---
+
+## 📌 Notes
+
+- Do NOT upload `.env` file
+- Do NOT upload `node_modules`
+- Use `.gitignore`
+
+---
+
+## ⭐ If you like this project
+
+Give it a star ⭐ on GitHub
