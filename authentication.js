@@ -2,8 +2,9 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const session=require('express-session');
-const MongoStore=require("connect-mongo").default;
+
+const jwt=require("jsonwebtoken");
+
 const app = express();
 require("dotenv").config();
 
@@ -24,63 +25,41 @@ mongoose
   }
 });
   const User=mongoose.model("User",userSchema);
-  
+  //!middleware
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser())
 //!Set the view engine
 app.set("view engine", "ejs");
-app.use(cookieParser());
 
 //?----Custom middleware----
 
-const isAuthenticated=(req,res,next)=>{
-  const userDataCookies=req.cookies.userData;
-  try{
-const username=req.session.userData?req.session.userData.username:null;
-if(username){
-
-return next();
-
-}else{
-  res.redirect("/login")
-}
-  
-  }catch(err){
-console.log(err.message)
+ const isAuthenticated=(req,res,next)=>{
+  const token=req.cookies?req.cookies.token:null;
+  if(!token){
+    return res.redirect("/login")
   }
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return res.redirect("/login");
+    req.userData = decoded;
+    next();
+  });
+ }
   
-}
+// }
 
 //isAdmin Auth
 const isAdmin=(req,res,next)=>{
-  const admin=req?.session?.userData?.role==="admin";
-  if(admin){
-return next();
-  }
-  else{
-    res.send("Forbidden: you  don't have access")
-  }
-
+   if (req.userData?.role === "admin") {
+     return next();
+   }
+   return res.status(403).send("Forbidden: Admins only");
 }
-//!configure express session
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-      maxAge: 60 * 60 * 1000,
-    },
-    store: MongoStore.create({
-      mongoUrl:
-        "mongodb://ifra00231_db_user:FL3KmjVBfxlzfa62@ac-vpuxiau-shard-00-00.vifglsr.mongodb.net:27017,ac-vpuxiau-shard-00-01.vifglsr.mongodb.net:27017,ac-vpuxiau-shard-00-02.vifglsr.mongodb.net:27017/db-authen?ssl=true&replicaSet=atlas-13h742-shard-0&authSource=admin&appName=Cluster0",
-    }),
-  }),
-);
-  
+
+
 
 //Home Route
 app.get("/", (req, res) => {
-  console.log(req.session)
+ 
   res.render("home");
 });
 //Login Route (login form)
@@ -114,10 +93,23 @@ app.post("/login",async  (req, res) => {
   })
  
   if(userFound && (await bcrypt.compare(password,userFound.password))){
- req.session.userData={
-  username:userFound.username,
-  role:userFound.role
- }, 
+    //!Generate token
+    const token = jwt.sign(
+      {
+        username: userFound.username,
+        role: userFound.role,
+      },
+      process.env.JWT_SECRET,
+      {
+        expiresIn: "3d",
+      },
+    );
+    console.log(token);
+    console.log(req.cookies)
+    res.cookie("token",token,{
+      maxAge:3*24*60*60*1000,
+      httpOnly:true
+    })
 res.redirect("/dashboard")
   }
 
@@ -129,19 +121,21 @@ res.redirect("/dashboard")
 //Dashboard Route
 app.get("/dashboard",isAuthenticated, (req, res) => {
   //! Grab the user from the cookie
-  const username = req.session.userData
-    ? req.session.userData.username
-    : null;
+  const username = req.userData?req.userData.username:null;
   //! Render the template
-  
+  if(username){
     res.render("dashboard", { username });
+  }
+  else{
+    res.redirect("/login")
+  }
   
 });
 
 //Logout Route
 app.get("/logout", (req, res) => {
   //!Logout
-  req.session.destroy();
+  res.clearCookie("token");
   //redirect
   res.redirect("/login");
 });
